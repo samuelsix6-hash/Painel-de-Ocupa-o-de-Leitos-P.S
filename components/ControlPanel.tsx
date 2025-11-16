@@ -19,7 +19,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate
   // Sync local state when the date (and thus data) changes from parent
   useEffect(() => {
     setLocalBedData(bedDataForDate);
-  }, [bedDataForDate]);
+  }, [bedDataForDate, currentDate]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
