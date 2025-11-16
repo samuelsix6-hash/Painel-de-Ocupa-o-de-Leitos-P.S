@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { BedData, BedType, StatusLevel, ChartData, HistoricalData } from './types';
-import { INITIAL_HISTORICAL_DATA, BED_THRESHOLDS, STATUS_CONFIG, BED_MAX_VALUES, EMPTY_BED_DATA, BED_CAPACITY } from './constants';
+import { INITIAL_HISTORICAL_DATA, BED_THRESHOLDS, STATUS_CONFIG, EMPTY_BED_DATA, BED_CAPACITY } from './constants';
 import Header from './components/Header';
 import StatusCard from './components/StatusCard';
 import BedChart from './components/BedChart';
@@ -13,10 +13,6 @@ import Toast from './components/Toast';
 
 const formatDateKey = (date: Date) => date.toISOString().slice(0, 10);
 
-// IMPORTANT: Replace this with the raw URL to your `data.json` file on GitHub or another host.
-const PUBLIC_DATA_URL = 'https://raw.githubusercontent.com/SEU-USUARIO/SEU-REPOSITORIO/main/data.json';
-
-
 const App: React.FC = () => {
   const [historicalData, setHistoricalData] = useState<HistoricalData>(INITIAL_HISTORICAL_DATA);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -24,19 +20,26 @@ const App: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [justSavedDateKey, setJustSavedDateKey] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
 
   useEffect(() => {
-    const initializeApp = async () => {
+    const initializeApp = () => {
       setIsLoading(true);
       const urlParams = new URLSearchParams(window.location.search);
-      const isUserAdmin = urlParams.get('admin') === 'true';
-      setIsAdminMode(isUserAdmin);
+      const sharedData = urlParams.get('data');
 
       let dataToProcess: HistoricalData | null = null;
 
-      if (isUserAdmin) {
-        // Admin mode: Always load from localStorage for the working copy.
+      if (sharedData) {
+        try {
+          // Decode data from URL
+          const decodedData = JSON.parse(atob(sharedData));
+          dataToProcess = decodedData;
+        } catch (e) {
+          console.error("Failed to parse shared data from URL", e);
+          setToastMessage("Erro ao carregar dados do link.");
+        }
+      } else {
+        // Fallback to localStorage if no URL data
         const savedData = localStorage.getItem('hospitalBedData');
         if (savedData) {
           try {
@@ -46,22 +49,6 @@ const App: React.FC = () => {
             setToastMessage("Erro ao carregar dados locais.");
           }
         }
-      } else {
-        // Public mode: Fetch from the central public URL with cache busting.
-        try {
-          // Append a cache-busting query parameter to prevent the browser from showing stale data
-          const cacheBustedUrl = `${PUBLIC_DATA_URL}?t=${new Date().getTime()}`;
-          const response = await fetch(cacheBustedUrl);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch public data: ${response.statusText}`);
-          }
-          dataToProcess = await response.json();
-        } catch (error) {
-          console.error("Error loading public data:", error);
-          setToastMessage("Falha ao carregar os dados mais recentes. Verifique a conexão.");
-          // In public mode, we don't fall back to localStorage. We show an empty state on failure.
-          dataToProcess = null;
-        }
       }
 
       if (dataToProcess && Object.keys(dataToProcess).length > 0) {
@@ -70,7 +57,6 @@ const App: React.FC = () => {
         setHistoricalData(dataToProcess);
         setCurrentDate(new Date(`${latestDateStr}T00:00:00`));
       } else {
-        // If dataToProcess is null (e.g., public fetch failed) or empty, initialize with empty data.
         setHistoricalData(INITIAL_HISTORICAL_DATA);
         setCurrentDate(new Date());
       }
@@ -79,18 +65,6 @@ const App: React.FC = () => {
 
     initializeApp();
   }, []);
-
-  useEffect(() => {
-    // Only save to localStorage in admin mode
-    if (isAdminMode) {
-        try {
-            localStorage.setItem('hospitalBedData', JSON.stringify(historicalData));
-        } catch (error) {
-            console.error("Error saving data to localStorage", error);
-        }
-    }
-  }, [historicalData, isAdminMode]);
-
 
   const currentBedData = useMemo<BedData>(() => {
     return historicalData[formatDateKey(currentDate)] || EMPTY_BED_DATA;
@@ -134,33 +108,49 @@ const App: React.FC = () => {
 
   const handleSaveData = (date: Date, data: BedData) => {
     const dateKey = formatDateKey(date);
-    setHistoricalData(prevData => ({
-      ...prevData,
+    const newHistoricalData = {
+      ...historicalData,
       [dateKey]: data
-    }));
+    };
+    setHistoricalData(newHistoricalData);
+    localStorage.setItem('hospitalBedData', JSON.stringify(newHistoricalData));
     setToastMessage('Dados salvos com sucesso!');
     setJustSavedDateKey(dateKey);
     setTimeout(() => setJustSavedDateKey(null), 1500);
   };
   
   const handleDeleteData = (dateKey: string) => {
-    setHistoricalData(prevData => {
-      const newData = { ...prevData };
-      delete newData[dateKey];
-      
-      if (formatDateKey(currentDate) === dateKey) {
-        const remainingDates = Object.keys(newData).sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
-        if (remainingDates.length > 0) {
-          setCurrentDate(new Date(`${remainingDates[0]}T00:00:00`));
-        } else {
-          setCurrentDate(new Date());
-        }
+    const newData = { ...historicalData };
+    delete newData[dateKey];
+    
+    if (formatDateKey(currentDate) === dateKey) {
+      const remainingDates = Object.keys(newData).sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
+      if (remainingDates.length > 0) {
+        setCurrentDate(new Date(`${remainingDates[0]}T00:00:00`));
+      } else {
+        setCurrentDate(new Date());
       }
+    }
 
-      return newData;
-    });
+    setHistoricalData(newData);
+    localStorage.setItem('hospitalBedData', JSON.stringify(newData));
     setToastMessage('Registro excluído com sucesso!');
   };
+
+  const handleShare = () => {
+    try {
+        const dataStr = JSON.stringify(historicalData);
+        const encodedData = btoa(dataStr);
+        const url = new URL(window.location.origin + window.location.pathname);
+        url.searchParams.set('data', encodedData);
+        navigator.clipboard.writeText(url.href);
+        setToastMessage('Link de compartilhamento copiado!');
+    } catch (e) {
+        console.error("Failed to create share link", e);
+        setToastMessage('Erro ao criar link de compartilhamento.');
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -184,22 +174,15 @@ const App: React.FC = () => {
           </div>
 
           <div className="lg:col-span-1 bg-white p-6 rounded-xl shadow-md">
-              {isAdminMode ? (
                 <ControlPanel
                     bedDataForDate={currentBedData}
                     currentDate={currentDate}
                     onDateChange={setCurrentDate}
                     onSave={handleSaveData}
+                    onShare={handleShare}
                     isAuthenticated={isAuthenticated}
                     setIsAuthenticated={setIsAuthenticated}
-                    historicalData={historicalData}
                 />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full">
-                    <h2 className="text-xl font-bold text-gray-700 mb-2">Modo de Visualização</h2>
-                    <p className="text-gray-500 text-center">Os dados estão sendo exibidos em tempo real. Para editar, acesse o painel de administração.</p>
-                </div>
-              )}
           </div>
         </div>
 
@@ -227,7 +210,7 @@ const App: React.FC = () => {
             data={historicalData} 
             onDelete={handleDeleteData} 
             highlightedDateKey={justSavedDateKey}
-            isAdmin={isAdminMode && isAuthenticated}
+            isAdmin={isAuthenticated}
           />
         </div>
 
