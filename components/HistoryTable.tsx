@@ -10,6 +10,7 @@ interface HistoryTableProps {
     data: HistoricalData;
     onDelete: (dateKey: string) => void;
     highlightedDateKey: string | null;
+    isAdmin: boolean;
 }
 
 const DeleteIcon = () => (
@@ -25,7 +26,7 @@ const DownloadIcon = () => (
 );
 
 
-const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlightedDateKey }) => {
+const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlightedDateKey, isAdmin }) => {
     const [dateToDelete, setDateToDelete] = useState<string | null>(null);
 
     const sortedDates = Object.keys(data).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
@@ -114,9 +115,11 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlighted
                                     {type.replace('Leitos ', '').replace('Clínicos', 'Clín.').replace('Pediátricos', 'Ped.')}
                                 </th>
                             ))}
-                             <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Ações
-                            </th>
+                            {isAdmin && (
+                                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Ações
+                                </th>
+                            )}
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -133,15 +136,17 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlighted
                                             {bedDataForDate[type] ?? 'N/A'}
                                         </td>
                                     ))}
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                        <button
-                                            onClick={() => handleOpenModal(dateStr)}
-                                            className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition-colors"
-                                            aria-label={`Excluir dados de ${formattedDate}`}
-                                        >
-                                            <DeleteIcon />
-                                        </button>
-                                    </td>
+                                    {isAdmin && (
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                            <button
+                                                onClick={() => handleOpenModal(dateStr)}
+                                                className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition-colors"
+                                                aria-label={`Excluir dados de ${formattedDate}`}
+                                            >
+                                                <DeleteIcon />
+                                            </button>
+                                        </td>
+                                    )}
                                 </tr>
                             );
                         })}
@@ -156,7 +161,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlighted
                                     {totals[type]}
                                 </td>
                             ))}
-                            <td className="px-6 py-4"></td>
+                            {isAdmin && <td className="px-6 py-4"></td>}
                         </tr>
                     </tfoot>
                 </table>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { BedData, BedType } from '../types';
+import { BedData, BedType, HistoricalData } from '../types';
 import { BED_MAX_VALUES, PASSWORD } from '../constants';
 
 interface ControlPanelProps {
@@ -8,19 +8,20 @@ interface ControlPanelProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
   onSave: (date: Date, data: BedData) => void;
-  onShare: () => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
+  historicalData: HistoricalData;
 }
 
-const ShareIcon = () => (
+const ExportIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-      <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h10a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h10a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7zM10 4.414L12.586 7H7.414L10 4.414zM6 16V9h8v7H6z" />
     </svg>
 );
 
 
-const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate, onDateChange, onSave, onShare, isAuthenticated, setIsAuthenticated }) => {
+const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate, onDateChange, onSave, isAuthenticated, setIsAuthenticated, historicalData }) => {
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState('');
   const [localBedData, setLocalBedData] = useState<BedData>(bedDataForDate);
@@ -61,11 +62,24 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate
     onSave(currentDate, localBedData);
   };
 
+  const handleExportJson = () => {
+    const dataStr = JSON.stringify(historicalData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'data.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (!isAuthenticated) {
     return (
       <div>
-        <h2 className="text-xl font-bold text-gray-700 mb-4">Acesso Restrito</h2>
-        <p className="text-sm text-gray-500 mb-6">Insira a senha para alterar os dados.</p>
+        <h2 className="text-xl font-bold text-gray-700 mb-4">Acesso Administrativo</h2>
+        <p className="text-sm text-gray-500 mb-6">Insira a senha para gerenciar os dados.</p>
         <form onSubmit={handleLogin}>
           <div className="mb-4">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Senha</label>
@@ -144,19 +158,19 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate
               />
             </div>
         ))}
-        <div className="mt-4 flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={onShare}
-              className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <ShareIcon />
-              Compartilhar
-            </button>
+        <div className="mt-6 flex flex-col sm:flex-row gap-2">
             <button
               onClick={handleSaveClick}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
-              Salvar Dados
+              Salvar Dados Locais
+            </button>
+            <button
+              onClick={handleExportJson}
+              className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <ExportIcon />
+              Exportar para Publicação (JSON)
             </button>
         </div>
     </div>
