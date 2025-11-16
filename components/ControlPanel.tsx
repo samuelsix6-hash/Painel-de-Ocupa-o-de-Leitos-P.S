@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { BedData, BedType } from '../types';
 import { BED_MAX_VALUES, PASSWORD } from '../constants';
@@ -7,11 +8,19 @@ interface ControlPanelProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
   onSave: (date: Date, data: BedData) => void;
+  onShare: () => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
 }
 
-const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate, onDateChange, onSave, isAuthenticated, setIsAuthenticated }) => {
+const ShareIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+    </svg>
+);
+
+
+const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate, onDateChange, onSave, onShare, isAuthenticated, setIsAuthenticated }) => {
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState('');
   const [localBedData, setLocalBedData] = useState<BedData>(bedDataForDate);
@@ -135,12 +144,21 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate
               />
             </div>
         ))}
-        <button
-          onClick={handleSaveClick}
-          className="w-full mt-4 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        >
-          Salvar Dados
-        </button>
+        <div className="mt-4 flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={onShare}
+              className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <ShareIcon />
+              Compartilhar
+            </button>
+            <button
+              onClick={handleSaveClick}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              Salvar Dados
+            </button>
+        </div>
     </div>
   );
 };

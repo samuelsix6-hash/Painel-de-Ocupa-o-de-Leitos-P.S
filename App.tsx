@@ -16,10 +16,22 @@ const formatDateKey = (date: Date) => date.toISOString().slice(0, 10);
 const App: React.FC = () => {
   const [historicalData, setHistoricalData] = useState<HistoricalData>(() => {
     try {
+      // 1. Check for data in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const dataFromUrl = urlParams.get('data');
+      if (dataFromUrl) {
+        const decodedData = JSON.parse(atob(dataFromUrl));
+        // Also save it to local storage for persistence
+        localStorage.setItem('hospitalBedData', JSON.stringify(decodedData));
+        return decodedData;
+      }
+
+      // 2. Fallback to localStorage
       const savedData = localStorage.getItem('hospitalBedData');
       return savedData ? JSON.parse(savedData) : INITIAL_HISTORICAL_DATA;
     } catch (error) {
-      console.error("Error loading data from localStorage", error);
+      console.error("Error loading initial data", error);
+      // 3. Fallback to initial data on any error
       return INITIAL_HISTORICAL_DATA;
     }
   });
@@ -110,6 +122,19 @@ const App: React.FC = () => {
     setToastMessage('Registro excluído com sucesso!');
   };
 
+  const handleShare = () => {
+    try {
+        const dataString = JSON.stringify(historicalData);
+        const encodedData = btoa(dataString);
+        const url = `${window.location.origin}${window.location.pathname}?data=${encodedData}`;
+        navigator.clipboard.writeText(url);
+        setToastMessage('Link de compartilhamento copiado!');
+    } catch (error) {
+        console.error("Error creating share link", error);
+        setToastMessage('Erro ao criar link de compartilhamento.');
+    }
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen font-sans">
       <Header currentDate={currentDate} />
@@ -129,6 +154,7 @@ const App: React.FC = () => {
                 currentDate={currentDate}
                 onDateChange={setCurrentDate}
                 onSave={handleSaveData}
+                onShare={handleShare}
                 isAuthenticated={isAuthenticated}
                 setIsAuthenticated={setIsAuthenticated}
               />
