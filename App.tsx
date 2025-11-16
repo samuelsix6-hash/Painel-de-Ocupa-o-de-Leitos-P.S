@@ -14,28 +14,49 @@ import Toast from './components/Toast';
 const formatDateKey = (date: Date) => date.toISOString().slice(0, 10);
 
 const App: React.FC = () => {
-  const [historicalData, setHistoricalData] = useState<HistoricalData>(() => {
+  const [initialState] = useState(() => {
     try {
-      // 1. Check for data in URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const dataFromUrl = urlParams.get('data');
-      if (dataFromUrl) {
-        const decodedData = JSON.parse(atob(dataFromUrl));
-        // Also save it to local storage for persistence
-        localStorage.setItem('hospitalBedData', JSON.stringify(decodedData));
-        return decodedData;
-      }
+        const urlParams = new URLSearchParams(window.location.search);
+        const dataFromUrl = urlParams.get('data');
 
-      // 2. Fallback to localStorage
-      const savedData = localStorage.getItem('hospitalBedData');
-      return savedData ? JSON.parse(savedData) : INITIAL_HISTORICAL_DATA;
+        let dataToProcess: HistoricalData | null = null;
+
+        if (dataFromUrl) {
+            const decodedData = JSON.parse(atob(dataFromUrl));
+            localStorage.setItem('hospitalBedData', JSON.stringify(decodedData));
+            dataToProcess = decodedData;
+        } else {
+            const savedData = localStorage.getItem('hospitalBedData');
+            if (savedData) {
+                dataToProcess = JSON.parse(savedData);
+            }
+        }
+
+        if (dataToProcess && Object.keys(dataToProcess).length > 0) {
+            const sortedDates = Object.keys(dataToProcess).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+            const latestDateStr = sortedDates[0];
+            return {
+                initialData: dataToProcess,
+                initialDate: new Date(`${latestDateStr}T00:00:00`),
+            };
+        }
+        
+        return {
+            initialData: INITIAL_HISTORICAL_DATA,
+            initialDate: new Date(),
+        };
+
     } catch (error) {
-      console.error("Error loading initial data", error);
-      // 3. Fallback to initial data on any error
-      return INITIAL_HISTORICAL_DATA;
+        console.error("Error loading initial state:", error);
+        return {
+            initialData: INITIAL_HISTORICAL_DATA,
+            initialDate: new Date(),
+        };
     }
   });
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+
+  const [historicalData, setHistoricalData] = useState<HistoricalData>(initialState.initialData);
+  const [currentDate, setCurrentDate] = useState<Date>(initialState.initialDate);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [justSavedDateKey, setJustSavedDateKey] = useState<string | null>(null);
