@@ -28,49 +28,53 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const initializeApp = async () => {
-        setIsLoading(true);
-        const urlParams = new URLSearchParams(window.location.search);
-        const adminParam = urlParams.get('admin');
-        const isUserAdmin = adminParam === 'true';
-        setIsAdminMode(isUserAdmin);
+      setIsLoading(true);
+      const urlParams = new URLSearchParams(window.location.search);
+      const isUserAdmin = urlParams.get('admin') === 'true';
+      setIsAdminMode(isUserAdmin);
 
-        let dataToProcess: HistoricalData | null = null;
+      let dataToProcess: HistoricalData | null = null;
 
+      if (isUserAdmin) {
+        // Admin mode: Always load from localStorage for the working copy.
+        const savedData = localStorage.getItem('hospitalBedData');
+        if (savedData) {
+          try {
+            dataToProcess = JSON.parse(savedData);
+          } catch (e) {
+            console.error("Failed to parse local data", e);
+            setToastMessage("Erro ao carregar dados locais.");
+          }
+        }
+      } else {
+        // Public mode: Fetch from the central public URL with cache busting.
         try {
-            if (isUserAdmin) {
-                // Admin mode: Load from localStorage for editing
-                const savedData = localStorage.getItem('hospitalBedData');
-                if (savedData) {
-                    dataToProcess = JSON.parse(savedData);
-                }
-            } else {
-                // Public mode: Fetch from the central public URL
-                const response = await fetch(PUBLIC_DATA_URL);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch data: ${response.statusText}`);
-                }
-                dataToProcess = await response.json();
-            }
+          // Append a cache-busting query parameter to prevent the browser from showing stale data
+          const cacheBustedUrl = `${PUBLIC_DATA_URL}?t=${new Date().getTime()}`;
+          const response = await fetch(cacheBustedUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch public data: ${response.statusText}`);
+          }
+          dataToProcess = await response.json();
         } catch (error) {
-            console.error("Error loading data:", error);
-            setToastMessage("Falha ao carregar dados. Exibindo informações locais.");
-            // Fallback to localStorage if fetch fails even for public users
-            const savedData = localStorage.getItem('hospitalBedData');
-            if (savedData) {
-                dataToProcess = JSON.parse(savedData);
-            }
+          console.error("Error loading public data:", error);
+          setToastMessage("Falha ao carregar os dados mais recentes. Verifique a conexão.");
+          // In public mode, we don't fall back to localStorage. We show an empty state on failure.
+          dataToProcess = null;
         }
+      }
 
-        if (dataToProcess && Object.keys(dataToProcess).length > 0) {
-            const sortedDates = Object.keys(dataToProcess).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-            const latestDateStr = sortedDates[0];
-            setHistoricalData(dataToProcess);
-            setCurrentDate(new Date(`${latestDateStr}T00:00:00`));
-        } else {
-            setHistoricalData(INITIAL_HISTORICAL_DATA);
-            setCurrentDate(new Date());
-        }
-        setIsLoading(false);
+      if (dataToProcess && Object.keys(dataToProcess).length > 0) {
+        const sortedDates = Object.keys(dataToProcess).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+        const latestDateStr = sortedDates[0];
+        setHistoricalData(dataToProcess);
+        setCurrentDate(new Date(`${latestDateStr}T00:00:00`));
+      } else {
+        // If dataToProcess is null (e.g., public fetch failed) or empty, initialize with empty data.
+        setHistoricalData(INITIAL_HISTORICAL_DATA);
+        setCurrentDate(new Date());
+      }
+      setIsLoading(false);
     };
 
     initializeApp();
