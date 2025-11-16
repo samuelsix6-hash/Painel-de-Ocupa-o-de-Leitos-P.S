@@ -75,10 +75,10 @@ const App: React.FC = () => {
     if (!thresholds) {
       return StatusLevel.NORMAL;
     }
-    if (value > thresholds.critical) {
+    if (value >= thresholds.critical) {
       return StatusLevel.CRITICAL;
     }
-    if (value === thresholds.alert) {
+    if (value >= thresholds.alert) {
       return StatusLevel.ALERT;
     }
     return StatusLevel.NORMAL;

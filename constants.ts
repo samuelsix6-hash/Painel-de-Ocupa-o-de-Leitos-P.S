@@ -1,3 +1,4 @@
+
 import { BedData, BedType, StatusLevel, StatusConfig, HistoricalData } from './types';
 
 export const PASSWORD = 'Conselho@2026';
@@ -8,10 +9,11 @@ export const BED_CAPACITY = {
   [BedType.PEDIATRIC]: 8,
 };
 
+// Thresholds for status changes. Critical is at 100% capacity, Alert is at ~90%.
 export const BED_THRESHOLDS = {
-  [BedType.CLINICAL]: { alert: 46, critical: 46 },
-  [BedType.ICU]: { alert: 8, critical: 8 },
-  [BedType.PEDIATRIC]: { alert: 8, critical: 8 },
+  [BedType.CLINICAL]: { alert: 42, critical: 46 }, // Alert at ~90% of 46
+  [BedType.ICU]: { alert: 7, critical: 8 },      // Alert at ~90% of 8
+  [BedType.PEDIATRIC]: { alert: 7, critical: 8 }, // Alert at ~90% of 8
 };
 
 export const STATUS_CONFIG: StatusConfig = {
