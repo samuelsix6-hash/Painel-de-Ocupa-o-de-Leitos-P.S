@@ -5,9 +5,11 @@ import { StatusLevel } from '../types';
 
 const LegendItem: React.FC<{ status: StatusLevel }> = ({ status }) => {
     const config = statusConfig[status];
+    const circleColor = config.textColor.replace('text-', 'bg-').replace('700', '500');
+
     return (
         <div className="flex items-start space-x-3">
-            <div className={`w-5 h-5 mt-1 rounded-full ${config.color.split(' ')[0]}`}></div>
+            <div className={`w-5 h-5 mt-1 rounded-full ${circleColor}`}></div>
             <div>
                 <h4 className={`font-bold ${config.textColor}`}>{config.label}</h4>
                 <p className="text-sm text-gray-600">
