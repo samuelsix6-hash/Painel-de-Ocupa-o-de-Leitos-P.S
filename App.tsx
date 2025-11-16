@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { BedData, BedType, StatusLevel, ChartData, HistoricalData } from './types';
-import { INITIAL_HISTORICAL_DATA, BED_THRESHOLDS, STATUS_CONFIG, BED_MAX_VALUES, EMPTY_BED_DATA } from './constants';
+import { INITIAL_HISTORICAL_DATA, BED_THRESHOLDS, STATUS_CONFIG, BED_MAX_VALUES, EMPTY_BED_DATA, BED_CAPACITY } from './constants';
 import Header from './components/Header';
 import StatusCard from './components/StatusCard';
 import BedChart from './components/BedChart';
@@ -143,7 +143,7 @@ const App: React.FC = () => {
                 key={bedType}
                 title={bedType}
                 value={currentBedData[bedType]}
-                maxValue={BED_THRESHOLDS[bedType as keyof typeof BED_THRESHOLDS]?.critical ?? 0}
+                maxValue={BED_CAPACITY[bedType as keyof typeof BED_CAPACITY] ?? 0}
                 status={getStatus(bedType, currentBedData[bedType])}
                 hasThreshold={!!BED_THRESHOLDS[bedType as keyof typeof BED_THRESHOLDS]}
                 isHighlighted={justSavedDateKey === formatDateKey(currentDate)}

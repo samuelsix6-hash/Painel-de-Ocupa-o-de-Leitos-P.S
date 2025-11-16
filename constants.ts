@@ -2,6 +2,12 @@ import { BedData, BedType, StatusLevel, StatusConfig, HistoricalData } from './t
 
 export const PASSWORD = 'Conselho@2026';
 
+export const BED_CAPACITY = {
+  [BedType.CLINICAL]: 46,
+  [BedType.ICU]: 8,
+  [BedType.PEDIATRIC]: 8,
+};
+
 export const BED_THRESHOLDS = {
   [BedType.CLINICAL]: { alert: 46, critical: 46 },
   [BedType.ICU]: { alert: 8, critical: 8 },
