@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { BedData, BedType, StatusLevel, ChartData, HistoricalData } from './types';
 import { INITIAL_HISTORICAL_DATA, BED_THRESHOLDS, STATUS_CONFIG, BED_MAX_VALUES, EMPTY_BED_DATA } from './constants';
 import Header from './components/Header';
@@ -9,13 +9,32 @@ import ControlPanel from './components/ControlPanel';
 import StatusLegend from './components/StatusLegend';
 import HistoryTable from './components/HistoryTable';
 import ComparisonTool from './components/ComparisonTool';
+import Toast from './components/Toast';
 
 const formatDateKey = (date: Date) => date.toISOString().slice(0, 10);
 
 const App: React.FC = () => {
-  const [historicalData, setHistoricalData] = useState<HistoricalData>(INITIAL_HISTORICAL_DATA);
+  const [historicalData, setHistoricalData] = useState<HistoricalData>(() => {
+    try {
+      const savedData = localStorage.getItem('hospitalBedData');
+      return savedData ? JSON.parse(savedData) : INITIAL_HISTORICAL_DATA;
+    } catch (error) {
+      console.error("Error loading data from localStorage", error);
+      return INITIAL_HISTORICAL_DATA;
+    }
+  });
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  
+  useEffect(() => {
+    try {
+      localStorage.setItem('hospitalBedData', JSON.stringify(historicalData));
+    } catch (error) {
+      console.error("Error saving data to localStorage", error);
+    }
+  }, [historicalData]);
+
 
   const currentBedData = useMemo<BedData>(() => {
     return historicalData[formatDateKey(currentDate)] || EMPTY_BED_DATA;
@@ -65,6 +84,7 @@ const App: React.FC = () => {
       ...prevData,
       [dateKey]: data
     }));
+    setToastMessage('Dados salvos com sucesso!');
   };
   
   const handleDeleteData = (dateKey: string) => {
@@ -84,11 +104,13 @@ const App: React.FC = () => {
 
       return newData;
     });
+    setToastMessage('Registro excluído com sucesso!');
   };
 
   return (
     <div className="bg-gray-100 min-h-screen font-sans">
       <Header currentDate={currentDate} />
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
       <main className="container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
@@ -118,7 +140,7 @@ const App: React.FC = () => {
                 key={bedType}
                 title={bedType}
                 value={currentBedData[bedType]}
-                maxValue={BED_MAX_VALUES[bedType]}
+                maxValue={BED_THRESHOLDS[bedType as keyof typeof BED_THRESHOLDS]?.critical ?? 0}
                 status={getStatus(bedType, currentBedData[bedType])}
                 hasThreshold={!!BED_THRESHOLDS[bedType as keyof typeof BED_THRESHOLDS]}
                 />

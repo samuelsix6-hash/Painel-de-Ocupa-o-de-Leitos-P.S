@@ -35,9 +35,11 @@ const StatusCard: React.FC<StatusCardProps> = ({ title, value, maxValue, status,
           <p className={`text-4xl font-bold ${config.textColor}`}>
             {value}
           </p>
-          <p className={`text-xl font-semibold ${config.textColor} opacity-80`}>
-            ({percentage}%)
-          </p>
+          {hasThreshold && (
+            <p className={`text-xl font-semibold ${config.textColor} opacity-80`}>
+                ({percentage}%)
+            </p>
+          )}
         </div>
         <p className="text-sm text-gray-400">leitos ocupados</p>
       </div>
