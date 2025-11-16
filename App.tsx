@@ -26,6 +26,7 @@ const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [justSavedDateKey, setJustSavedDateKey] = useState<string | null>(null);
   
   useEffect(() => {
     try {
@@ -85,6 +86,8 @@ const App: React.FC = () => {
       [dateKey]: data
     }));
     setToastMessage('Dados salvos com sucesso!');
+    setJustSavedDateKey(dateKey);
+    setTimeout(() => setJustSavedDateKey(null), 1500); // Reset after animation
   };
   
   const handleDeleteData = (dateKey: string) => {
@@ -143,6 +146,7 @@ const App: React.FC = () => {
                 maxValue={BED_THRESHOLDS[bedType as keyof typeof BED_THRESHOLDS]?.critical ?? 0}
                 status={getStatus(bedType, currentBedData[bedType])}
                 hasThreshold={!!BED_THRESHOLDS[bedType as keyof typeof BED_THRESHOLDS]}
+                isHighlighted={justSavedDateKey === formatDateKey(currentDate)}
                 />
             ))}
             </div>
@@ -151,7 +155,11 @@ const App: React.FC = () => {
         <ComparisonTool historicalData={historicalData} />
 
         <div className="mt-6 bg-white p-6 rounded-xl shadow-md">
-          <HistoryTable data={historicalData} onDelete={handleDeleteData} />
+          <HistoryTable 
+            data={historicalData} 
+            onDelete={handleDeleteData} 
+            highlightedDateKey={justSavedDateKey}
+          />
         </div>
 
         <div className="mt-6 bg-white p-6 rounded-xl shadow-md">

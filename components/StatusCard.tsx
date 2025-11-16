@@ -9,9 +9,10 @@ interface StatusCardProps {
   maxValue: number;
   status: StatusLevel;
   hasThreshold: boolean;
+  isHighlighted?: boolean;
 }
 
-const StatusCard: React.FC<StatusCardProps> = ({ title, value, maxValue, status, hasThreshold }) => {
+const StatusCard: React.FC<StatusCardProps> = ({ title, value, maxValue, status, hasThreshold, isHighlighted }) => {
   const config = hasThreshold ? STATUS_CONFIG[status] : {
     label: 'Informativo',
     color: 'bg-blue-100 border-blue-500',
@@ -21,7 +22,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ title, value, maxValue, status,
   const percentage = maxValue > 0 ? ((value / maxValue) * 100).toFixed(1) : '0.0';
 
   return (
-    <div className={`bg-white rounded-xl shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300 border-t-4 ${config.color.split(' ')[1]}`}>
+    <div className={`bg-white rounded-xl shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300 border-t-4 ${config.color.split(' ')[1]} ${isHighlighted ? 'animate-flash' : ''}`}>
       <div className="p-5">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{title}</h3>

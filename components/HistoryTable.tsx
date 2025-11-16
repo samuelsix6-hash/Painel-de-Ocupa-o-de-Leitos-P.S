@@ -9,6 +9,7 @@ declare const XLSX: any;
 interface HistoryTableProps {
     data: HistoricalData;
     onDelete: (dateKey: string) => void;
+    highlightedDateKey: string | null;
 }
 
 const DeleteIcon = () => (
@@ -24,7 +25,7 @@ const DownloadIcon = () => (
 );
 
 
-const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete }) => {
+const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlightedDateKey }) => {
     const [dateToDelete, setDateToDelete] = useState<string | null>(null);
 
     const sortedDates = Object.keys(data).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
@@ -123,7 +124,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete }) => {
                             const bedDataForDate = data[dateStr];
                             const formattedDate = new Date(`${dateStr}T00:00:00`).toLocaleDateString('pt-BR');
                             return (
-                                <tr key={dateStr} className="hover:bg-gray-50">
+                                <tr key={dateStr} className={`hover:bg-gray-50 ${dateStr === highlightedDateKey ? 'animate-flash' : ''}`}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {formattedDate}
                                     </td>
