@@ -9,11 +9,14 @@ export const BED_CAPACITY = {
   [BedType.PEDIATRIC]: 8,
 };
 
-// Thresholds for status changes. Critical is at 100% capacity, Alert is at ~90%.
+// Thresholds for status changes.
+// Normal: below alert threshold
+// Alert: at or above alert threshold, but below critical threshold
+// Critical: at or above critical threshold
 export const BED_THRESHOLDS = {
-  [BedType.CLINICAL]: { alert: 42, critical: 46 }, // Alert at ~90% of 46
-  [BedType.ICU]: { alert: 7, critical: 8 },      // Alert at ~90% of 8
-  [BedType.PEDIATRIC]: { alert: 7, critical: 8 }, // Alert at ~90% of 8
+  [BedType.CLINICAL]: { alert: 46, critical: 47 }, // Green < 46, Yellow = 46, Red > 46
+  [BedType.ICU]: { alert: 8, critical: 9 },      // Green < 8, Yellow = 8, Red > 8
+  [BedType.PEDIATRIC]: { alert: 8, critical: 9 }, // Green < 8, Yellow = 8, Red > 8
 };
 
 export const STATUS_CONFIG: StatusConfig = {
