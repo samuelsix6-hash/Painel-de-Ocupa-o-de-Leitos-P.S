@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { BedData, BedType, StatusLevel, ChartData, HistoricalData } from './types';
 import { INITIAL_HISTORICAL_DATA, BED_THRESHOLDS, STATUS_CONFIG, EMPTY_BED_DATA, BED_CAPACITY } from './constants';
@@ -10,6 +11,7 @@ import StatusLegend from './components/StatusLegend';
 import HistoryTable from './components/HistoryTable';
 import ComparisonTool from './components/ComparisonTool';
 import Toast from './components/Toast';
+import OverwriteConfirmationModal from './components/OverwriteConfirmationModal';
 
 const formatDateKey = (date: Date) => date.toISOString().slice(0, 10);
 
@@ -20,6 +22,8 @@ const App: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [justSavedDateKey, setJustSavedDateKey] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [overwriteConfirmation, setOverwriteConfirmation] = useState<{date: Date, data: BedData} | null>(null);
+
 
   useEffect(() => {
     const initializeApp = () => {
@@ -106,7 +110,7 @@ const App: React.FC = () => {
     });
   }, [currentBedData]);
 
-  const handleSaveData = (date: Date, data: BedData) => {
+  const performSave = (date: Date, data: BedData) => {
     const dateKey = formatDateKey(date);
     const newHistoricalData = {
       ...historicalData,
@@ -117,6 +121,26 @@ const App: React.FC = () => {
     setToastMessage('Dados salvos com sucesso!');
     setJustSavedDateKey(dateKey);
     setTimeout(() => setJustSavedDateKey(null), 1500);
+  };
+
+  const handleSaveData = (date: Date, data: BedData) => {
+    const dateKey = formatDateKey(date);
+    if (historicalData[dateKey]) {
+        setOverwriteConfirmation({ date, data });
+    } else {
+        performSave(date, data);
+    }
+  };
+
+  const handleConfirmOverwrite = () => {
+    if (overwriteConfirmation) {
+        performSave(overwriteConfirmation.date, overwriteConfirmation.data);
+        setOverwriteConfirmation(null);
+    }
+  };
+
+  const handleCancelOverwrite = () => {
+    setOverwriteConfirmation(null);
   };
   
   const handleDeleteData = (dateKey: string) => {
@@ -219,6 +243,13 @@ const App: React.FC = () => {
         </div>
 
       </main>
+      
+      <OverwriteConfirmationModal
+          isOpen={!!overwriteConfirmation}
+          onClose={handleCancelOverwrite}
+          onConfirm={handleConfirmOverwrite}
+          date={overwriteConfirmation ? overwriteConfirmation.date.toLocaleDateString('pt-BR') : ''}
+      />
     </div>
   );
 };
