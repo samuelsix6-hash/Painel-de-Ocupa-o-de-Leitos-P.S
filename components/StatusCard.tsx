@@ -19,7 +19,8 @@ const StatusCard: React.FC<StatusCardProps> = ({ title, value, maxValue, status,
     textColor: 'text-blue-700'
   };
 
-  const percentage = maxValue > 0 ? ((value / maxValue) * 100).toFixed(1) : '0.0';
+  // Corrected percentage calculation to accurately reflect over-capacity situations.
+  const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
 
   return (
     <div className={`bg-white rounded-xl shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300 border-t-4 ${config.color.split(' ')[1]} ${isHighlighted ? 'animate-flash' : ''}`}>
@@ -38,7 +39,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ title, value, maxValue, status,
           </p>
           {hasThreshold && (
             <p className={`text-xl font-semibold ${config.textColor} opacity-80`}>
-                ({percentage}%)
+                ({percentage.toFixed(1)}%)
             </p>
           )}
         </div>

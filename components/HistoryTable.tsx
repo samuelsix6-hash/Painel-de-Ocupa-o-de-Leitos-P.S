@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { BedData, BedType, HistoricalData } from '../types';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
@@ -46,13 +45,6 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlighted
             handleCloseModal();
         }
     };
-
-    const totals: BedData = bedTypes.reduce((acc, type) => {
-        acc[type] = sortedDates.reduce((sum, dateStr) => {
-            return sum + (data[dateStr][type] || 0);
-        }, 0);
-        return acc;
-    }, {} as Partial<BedData>) as BedData;
 
     const handleDownloadExcel = () => {
         const formattedBedTypes = bedTypes.map(type => 
@@ -151,19 +143,6 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlighted
                             );
                         })}
                     </tbody>
-                    <tfoot className="bg-gray-100">
-                        <tr className="font-bold">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
-                                Total
-                            </td>
-                            {bedTypes.map(type => (
-                                <td key={`total-${type}`} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                    {totals[type]}
-                                </td>
-                            ))}
-                            {isAdmin && <td className="px-6 py-4"></td>}
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
 
