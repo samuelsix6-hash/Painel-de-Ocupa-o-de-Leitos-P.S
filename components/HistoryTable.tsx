@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { BedData, BedType, HistoricalData } from '../types';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
@@ -30,6 +31,35 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlighted
 
     const sortedDates = Object.keys(data).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     const bedTypes = Object.values(BedType);
+
+    const clinicalStats = useMemo(() => {
+        if (sortedDates.length === 0) return null;
+
+        let maxVal = -1;
+        let minVal = Infinity;
+        let maxDate = '';
+        let minDate = '';
+
+        sortedDates.forEach(dateStr => {
+            const val = data[dateStr][BedType.CLINICAL] ?? 0;
+            
+            if (val > maxVal) {
+                maxVal = val;
+                maxDate = dateStr;
+            }
+            
+            if (val < minVal) {
+                minVal = val;
+                minDate = dateStr;
+            }
+        });
+
+        if (maxDate === '') maxDate = sortedDates[0];
+        if (minDate === '') minDate = sortedDates[0];
+        if (minVal === Infinity) minVal = 0;
+
+        return { maxDate, maxVal, minDate, minVal };
+    }, [data, sortedDates]);
 
     const handleOpenModal = (dateStr: string) => {
         setDateToDelete(dateStr);
@@ -145,6 +175,32 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlighted
                     </tbody>
                 </table>
             </div>
+
+            {clinicalStats && (
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-6 border-gray-200">
+                    <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-100 shadow-sm">
+                        <div>
+                            <p className="text-xs font-bold text-red-600 uppercase tracking-wider mb-1">Maior Lotação (Clínicos)</p>
+                            <p className="text-3xl font-bold text-red-700">{clinicalStats.maxVal} <span className="text-sm font-medium text-red-500">leitos</span></p>
+                        </div>
+                        <div className="text-right">
+                             <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Data</p>
+                             <p className="text-lg font-bold text-gray-800">{new Date(`${clinicalStats.maxDate}T00:00:00`).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-100 shadow-sm">
+                        <div>
+                             <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-1">Menor Lotação (Clínicos)</p>
+                             <p className="text-3xl font-bold text-green-700">{clinicalStats.minVal} <span className="text-sm font-medium text-green-500">leitos</span></p>
+                        </div>
+                         <div className="text-right">
+                             <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Data</p>
+                             <p className="text-lg font-bold text-gray-800">{new Date(`${clinicalStats.minDate}T00:00:00`).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <DeleteConfirmationModal
                 isOpen={!!dateToDelete}
