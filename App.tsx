@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { BedData, BedType, StatusLevel, ChartData, HistoricalData } from './types';
 import { INITIAL_HISTORICAL_DATA, BED_THRESHOLDS, STATUS_CONFIG, EMPTY_BED_DATA, BED_CAPACITY } from './constants';
@@ -216,7 +215,7 @@ const App: React.FC = () => {
             {(Object.keys(currentBedData) as BedType[]).map(bedType => (
                 <StatusCard
                 key={bedType}
-                title={bedType}
+                title={bedType === BedType.ICU ? `${bedType} (emergência) (variável)` : bedType}
                 value={currentBedData[bedType]}
                 maxValue={BED_CAPACITY[bedType as keyof typeof BED_CAPACITY] ?? 0}
                 status={getStatus(bedType, currentBedData[bedType])}
@@ -240,6 +239,10 @@ const App: React.FC = () => {
 
         <div className="mt-6 bg-white p-6 rounded-xl shadow-md">
             <StatusLegend />
+        </div>
+
+        <div className="mt-8 text-center text-gray-500 text-sm pb-4">
+            <p>Leitos clínicos capacidade total 46; leitos pediátricos capacidade total 8; leitos uti capacidade total 7 nº variável.</p>
         </div>
 
       </main>

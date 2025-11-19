@@ -5,7 +5,7 @@ export const PASSWORD = 'Conselho@2026';
 
 export const BED_CAPACITY = {
   [BedType.CLINICAL]: 46,
-  [BedType.ICU]: 8,
+  [BedType.ICU]: 7,
   [BedType.PEDIATRIC]: 8,
 };
 
@@ -15,7 +15,7 @@ export const BED_CAPACITY = {
 // Critical: at or above critical threshold
 export const BED_THRESHOLDS = {
   [BedType.CLINICAL]: { alert: 46, critical: 47 }, // Green < 46, Yellow = 46, Red > 46
-  [BedType.ICU]: { alert: 8, critical: 9 },      // Green < 8, Yellow = 8, Red > 8
+  [BedType.ICU]: { alert: 7, critical: 8 },      // Green < 7, Yellow = 7, Red > 7
   [BedType.PEDIATRIC]: { alert: 8, critical: 9 }, // Green < 8, Yellow = 8, Red > 8
 };
 
