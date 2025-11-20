@@ -241,8 +241,13 @@ const App: React.FC = () => {
             <StatusLegend />
         </div>
 
-        <div className="mt-8 text-center text-gray-500 text-sm pb-4">
-            <p>Leitos clínicos capacidade total 46; leitos pediátricos capacidade total 8; leitos uti capacidade total 7 nº variável.</p>
+        <div className="mt-8 text-center text-gray-500 text-sm pb-8">
+            <p className="mb-4 font-medium">Leitos clínicos capacidade total 46; leitos pediátricos capacidade total 8; leitos uti capacidade total 7 nº variável.</p>
+            <div className="border-t border-gray-200 pt-4 w-1/2 mx-auto">
+                <p className="text-xs text-gray-400 italic">
+                    Desenvolvido por <span className="font-semibold text-gray-500">Samuel Amaro</span>
+                </p>
+            </div>
         </div>
 
       </main>
