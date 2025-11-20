@@ -32,33 +32,40 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlighted
     const sortedDates = Object.keys(data).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     const bedTypes = Object.values(BedType);
 
-    const clinicalStats = useMemo(() => {
+    const stats = useMemo(() => {
         if (sortedDates.length === 0) return null;
 
-        let maxVal = -1;
-        let minVal = Infinity;
-        let maxDate = '';
-        let minDate = '';
+        const calculateStats = (type: BedType) => {
+            let maxVal = -1;
+            let minVal = Infinity;
 
-        sortedDates.forEach(dateStr => {
-            const val = data[dateStr][BedType.CLINICAL] ?? 0;
-            
-            if (val > maxVal) {
-                maxVal = val;
-                maxDate = dateStr;
-            }
-            
-            if (val < minVal) {
-                minVal = val;
-                minDate = dateStr;
-            }
-        });
+            // First pass: find min/max values
+            sortedDates.forEach(dateStr => {
+                const val = data[dateStr][type] ?? 0;
+                if (val > maxVal) maxVal = val;
+                if (val < minVal) minVal = val;
+            });
 
-        if (maxDate === '') maxDate = sortedDates[0];
-        if (minDate === '') minDate = sortedDates[0];
-        if (minVal === Infinity) minVal = 0;
+            if (minVal === Infinity) minVal = 0;
+            if (maxVal === -1) maxVal = 0;
 
-        return { maxDate, maxVal, minDate, minVal };
+            // Second pass: collect all dates matching min/max
+            const maxDates: string[] = [];
+            const minDates: string[] = [];
+
+            sortedDates.forEach(dateStr => {
+                const val = data[dateStr][type] ?? 0;
+                if (val === maxVal) maxDates.push(dateStr);
+                if (val === minVal) minDates.push(dateStr);
+            });
+
+            return { maxVal, maxDates, minVal, minDates };
+        };
+
+        return {
+            clinical: calculateStats(BedType.CLINICAL),
+            icu: calculateStats(BedType.ICU)
+        };
     }, [data, sortedDates]);
 
     const handleOpenModal = (dateStr: string) => {
@@ -101,6 +108,10 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlighted
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Histórico de Ocupação");
         XLSX.writeFile(wb, "Historico_Ocupacao_Leitos.xlsx");
+    };
+
+    const renderDateList = (dates: string[]) => {
+        return dates.map(d => new Date(`${d}T00:00:00`).toLocaleDateString('pt-BR')).join(', ');
     };
 
     if (sortedDates.length === 0) {
@@ -176,29 +187,73 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ data, onDelete, highlighted
                 </table>
             </div>
 
-            {clinicalStats && (
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-6 border-gray-200">
-                    <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-100 shadow-sm">
-                        <div>
-                            <p className="text-xs font-bold text-red-600 uppercase tracking-wider mb-1">Maior Lotação (Clínicos)</p>
-                            <p className="text-3xl font-bold text-red-700">{clinicalStats.maxVal} <span className="text-sm font-medium text-red-500">leitos</span></p>
-                        </div>
-                        <div className="text-right">
-                             <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Data</p>
-                             <p className="text-lg font-bold text-gray-800">{new Date(`${clinicalStats.maxDate}T00:00:00`).toLocaleDateString('pt-BR')}</p>
+            {stats && (
+                <div className="mt-6 space-y-6 border-t pt-6 border-gray-200">
+                    
+                    {/* Clinical Stats */}
+                    <div>
+                        <h4 className="text-lg font-semibold text-gray-700 mb-3">Estatísticas - Leitos Clínicos</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex flex-col p-4 bg-red-50 rounded-lg border border-red-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                    <p className="text-xs font-bold text-red-600 uppercase tracking-wider">Maior Lotação</p>
+                                    <p className="text-3xl font-bold text-red-700 leading-none">{stats.clinical.maxVal} <span className="text-sm font-medium text-red-500">leitos</span></p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Datas</p>
+                                    <div className="max-h-24 overflow-y-auto">
+                                        <p className="text-sm font-medium text-gray-800 leading-relaxed">{renderDateList(stats.clinical.maxDates)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col p-4 bg-green-50 rounded-lg border border-green-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                    <p className="text-xs font-bold text-green-600 uppercase tracking-wider">Menor Lotação</p>
+                                    <p className="text-3xl font-bold text-green-700 leading-none">{stats.clinical.minVal} <span className="text-sm font-medium text-green-500">leitos</span></p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Datas</p>
+                                    <div className="max-h-24 overflow-y-auto">
+                                        <p className="text-sm font-medium text-gray-800 leading-relaxed">{renderDateList(stats.clinical.minDates)}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-100 shadow-sm">
-                        <div>
-                             <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-1">Menor Lotação (Clínicos)</p>
-                             <p className="text-3xl font-bold text-green-700">{clinicalStats.minVal} <span className="text-sm font-medium text-green-500">leitos</span></p>
-                        </div>
-                         <div className="text-right">
-                             <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Data</p>
-                             <p className="text-lg font-bold text-gray-800">{new Date(`${clinicalStats.minDate}T00:00:00`).toLocaleDateString('pt-BR')}</p>
+                     {/* ICU Stats */}
+                     <div>
+                        <h4 className="text-lg font-semibold text-gray-700 mb-3">Estatísticas - Leitos UTI (emergência)</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex flex-col p-4 bg-red-50 rounded-lg border border-red-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                    <p className="text-xs font-bold text-red-600 uppercase tracking-wider">Maior Lotação</p>
+                                    <p className="text-3xl font-bold text-red-700 leading-none">{stats.icu.maxVal} <span className="text-sm font-medium text-red-500">leitos</span></p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Datas</p>
+                                    <div className="max-h-24 overflow-y-auto">
+                                        <p className="text-sm font-medium text-gray-800 leading-relaxed">{renderDateList(stats.icu.maxDates)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col p-4 bg-green-50 rounded-lg border border-green-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                    <p className="text-xs font-bold text-green-600 uppercase tracking-wider">Menor Lotação</p>
+                                    <p className="text-3xl font-bold text-green-700 leading-none">{stats.icu.minVal} <span className="text-sm font-medium text-green-500">leitos</span></p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Datas</p>
+                                    <div className="max-h-24 overflow-y-auto">
+                                        <p className="text-sm font-medium text-gray-800 leading-relaxed">{renderDateList(stats.icu.minDates)}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                 </div>
             )}
 
