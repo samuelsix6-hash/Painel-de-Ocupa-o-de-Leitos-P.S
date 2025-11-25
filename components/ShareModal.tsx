@@ -26,7 +26,6 @@ const CheckIcon = () => (
 );
 
 const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, getShareUrl }) => {
-    const [view, setView] = useState<'select' | 'result'>('select');
     const [longUrl, setLongUrl] = useState('');
     const [shortUrl, setShortUrl] = useState('');
     const [isShortening, setIsShortening] = useState(false);
@@ -35,21 +34,15 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, getShareUrl })
 
     useEffect(() => {
         if (isOpen) {
-            // Reset state when opening
-            setView('select');
-            setLongUrl('');
+            // Automatically generate full history URL when modal opens
+            const url = getShareUrl('all');
+            setLongUrl(url);
             setShortUrl('');
             setIsShortening(false);
             setCopyState('idle');
             setError(null);
         }
-    }, [isOpen]);
-
-    const handleGenerate = (scope: 'current' | 'all') => {
-        const url = getShareUrl(scope);
-        setLongUrl(url);
-        setView('result');
-    };
+    }, [isOpen]); // Removed getShareUrl dependency to avoid unnecessary re-generations if parent re-renders
 
     const handleShorten = async () => {
         setIsShortening(true);
@@ -86,7 +79,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, getShareUrl })
             <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md m-4 transform transition-all">
                 <div className="flex justify-between items-start mb-4">
                     <h3 id="share-modal-title" className="text-lg font-bold text-gray-900">
-                        {view === 'select' ? 'Compartilhar Dados' : 'Link Gerado'}
+                        Compartilhar Dados
                     </h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
                         <span className="sr-only">Fechar</span>
@@ -96,112 +89,73 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, getShareUrl })
                     </button>
                 </div>
                 
-                {view === 'select' ? (
-                    <>
-                        <p className="text-sm text-gray-600 mb-6">
-                            Selecione o que deseja incluir no link de compartilhamento.
-                        </p>
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                        Este link contém todo o histórico de dados inserido até o momento.
+                    </p>
 
-                        <div className="space-y-3">
-                            <button
-                                onClick={() => handleGenerate('current')}
-                                className="w-full flex justify-between items-center px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors group"
-                            >
-                                <div className="text-left">
-                                    <span className="block font-semibold text-blue-700">Apenas Data Atual</span>
-                                    <span className="text-xs text-blue-500">Gera um link mais leve.</span>
-                                </div>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                </svg>
-                            </button>
-
-                            <button
-                                onClick={() => handleGenerate('all')}
-                                className="w-full flex justify-between items-center px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors group"
-                            >
-                                <div className="text-left">
-                                    <span className="block font-semibold text-gray-700">Histórico Completo</span>
-                                    <span className="text-xs text-gray-500">Inclui todos os registros passados.</span>
-                                </div>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
-                    </>
-                ) : (
-                    <div className="space-y-4">
-                        {/* Short URL Section */}
-                        {shortUrl ? (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-3 animate-fade-in">
-                                <label className="block text-xs font-semibold text-green-700 uppercase mb-1">Link Encurtado</label>
-                                <div className="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        readOnly 
-                                        value={shortUrl} 
-                                        className="w-full bg-white border border-green-300 rounded px-2 py-1 text-sm text-gray-800 focus:outline-none"
-                                    />
-                                    <button
-                                        onClick={() => handleCopy(shortUrl, 'short')}
-                                        className={`flex-shrink-0 px-3 py-1 rounded text-sm font-medium transition-colors ${copyState === 'copied_short' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-                                    >
-                                        {copyState === 'copied_short' ? <CheckIcon /> : <CopyIcon />}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Link Completo</label>
-                                <div className="flex gap-2 mb-2">
-                                    <input 
-                                        type="text" 
-                                        readOnly 
-                                        value={longUrl} 
-                                        className="w-full bg-white border border-gray-300 rounded px-2 py-1 text-sm text-gray-500 focus:outline-none"
-                                    />
-                                    <button
-                                        onClick={() => handleCopy(longUrl, 'long')}
-                                        className={`flex-shrink-0 px-3 py-1 rounded text-sm font-medium transition-colors ${copyState === 'copied_long' ? 'bg-gray-700 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                                    >
-                                        {copyState === 'copied_long' ? <CheckIcon /> : <CopyIcon />}
-                                    </button>
-                                </div>
-                                
-                                {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
-
+                    {/* Short URL Section */}
+                    {shortUrl ? (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 animate-fade-in">
+                            <label className="block text-xs font-semibold text-green-700 uppercase mb-1">Link Encurtado</label>
+                            <div className="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    readOnly 
+                                    value={shortUrl} 
+                                    className="w-full bg-white border border-green-300 rounded px-2 py-1 text-sm text-gray-800 focus:outline-none"
+                                />
                                 <button
-                                    onClick={handleShorten}
-                                    disabled={isShortening}
-                                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                                    onClick={() => handleCopy(shortUrl, 'short')}
+                                    className={`flex-shrink-0 px-3 py-1 rounded text-sm font-medium transition-colors ${copyState === 'copied_short' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
                                 >
-                                    {isShortening ? (
-                                        <span className="flex items-center gap-2">
-                                            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Encurtando...
-                                        </span>
-                                    ) : (
-                                        <>
-                                            <MagicIcon />
-                                            Encurtar Link
-                                        </>
-                                    )}
+                                    {copyState === 'copied_short' ? <CheckIcon /> : <CopyIcon />}
                                 </button>
                             </div>
-                        )}
+                        </div>
+                    ) : (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Link Completo</label>
+                            <div className="flex gap-2 mb-2">
+                                <input 
+                                    type="text" 
+                                    readOnly 
+                                    value={longUrl} 
+                                    className="w-full bg-white border border-gray-300 rounded px-2 py-1 text-sm text-gray-500 focus:outline-none"
+                                />
+                                <button
+                                    onClick={() => handleCopy(longUrl, 'long')}
+                                    className={`flex-shrink-0 px-3 py-1 rounded text-sm font-medium transition-colors ${copyState === 'copied_long' ? 'bg-gray-700 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                                >
+                                    {copyState === 'copied_long' ? <CheckIcon /> : <CopyIcon />}
+                                </button>
+                            </div>
+                            
+                            {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
 
-                        <button
-                            onClick={() => setView('select')}
-                            className="w-full text-center text-sm text-gray-500 hover:text-gray-700 mt-4 underline"
-                        >
-                            Voltar
-                        </button>
-                    </div>
-                )}
+                            <button
+                                onClick={handleShorten}
+                                disabled={isShortening}
+                                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                            >
+                                {isShortening ? (
+                                    <span className="flex items-center gap-2">
+                                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Encurtando...
+                                    </span>
+                                ) : (
+                                    <>
+                                        <MagicIcon />
+                                        Encurtar Link
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
