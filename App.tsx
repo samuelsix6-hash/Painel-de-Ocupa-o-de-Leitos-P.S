@@ -12,6 +12,9 @@ import ComparisonTool from './components/ComparisonTool';
 import Toast from './components/Toast';
 import OverwriteConfirmationModal from './components/OverwriteConfirmationModal';
 
+// Declare LZString global from CDN
+declare const LZString: any;
+
 const formatDateKey = (date: Date) => date.toISOString().slice(0, 10);
 
 const App: React.FC = () => {
@@ -34,12 +37,28 @@ const App: React.FC = () => {
 
       if (sharedData) {
         try {
-          // Decode data from URL with URI decoding to handle special characters properly
-          const decodedData = JSON.parse(decodeURIComponent(atob(sharedData)));
-          dataToProcess = decodedData;
+          // 1. Attempt to decompress using LZString (New Format)
+          let jsonString = LZString.decompressFromEncodedURIComponent(sharedData);
+
+          // 2. If decompression returns null/empty, it might be the old format (Base64)
+          if (!jsonString) {
+             try {
+                 // Fallback to old decoding method
+                 jsonString = decodeURIComponent(atob(sharedData));
+             } catch (e) {
+                 console.warn("Legacy decoding failed, link might be invalid or corrupted.");
+             }
+          }
+
+          if (jsonString) {
+              dataToProcess = JSON.parse(jsonString);
+          } else {
+              throw new Error("Could not decode data");
+          }
+
         } catch (e) {
           console.error("Failed to parse shared data from URL", e);
-          setToastMessage("Erro ao carregar dados do link.");
+          setToastMessage("Erro ao carregar dados do link. O formato pode ser inválido.");
         }
       } else {
         // Fallback to localStorage if no URL data
@@ -166,16 +185,19 @@ const App: React.FC = () => {
 
         if (scope === 'current') {
             const dateKey = formatDateKey(currentDate);
-            // If the current date exists in history, use it. Otherwise use the empty template (though usually it should exist if viewed)
             const currentData = historicalData[dateKey] || EMPTY_BED_DATA;
             dataToShare = { [dateKey]: currentData };
         }
 
         const dataStr = JSON.stringify(dataToShare);
-        // Using encodeURIComponent to handle UTF-8 characters properly before base64 encoding
-        const encodedData = btoa(encodeURIComponent(dataStr));
+        
+        // COMPRESSION STEP:
+        // Use LZString to compress the JSON string into a URI-safe format.
+        // This significantly reduces URL length compared to standard Base64.
+        const compressedData = LZString.compressToEncodedURIComponent(dataStr);
+        
         const url = new URL(window.location.origin + window.location.pathname);
-        url.searchParams.set('data', encodedData);
+        url.searchParams.set('data', compressedData);
         return url.href;
     } catch (e) {
         console.error("Failed to create share link", e);
