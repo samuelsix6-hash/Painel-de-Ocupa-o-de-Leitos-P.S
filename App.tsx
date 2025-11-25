@@ -34,8 +34,8 @@ const App: React.FC = () => {
 
       if (sharedData) {
         try {
-          // Decode data from URL
-          const decodedData = JSON.parse(atob(sharedData));
+          // Decode data from URL with URI decoding to handle special characters properly
+          const decodedData = JSON.parse(decodeURIComponent(atob(sharedData)));
           dataToProcess = decodedData;
         } catch (e) {
           console.error("Failed to parse shared data from URL", e);
@@ -172,7 +172,8 @@ const App: React.FC = () => {
         }
 
         const dataStr = JSON.stringify(dataToShare);
-        const encodedData = btoa(dataStr);
+        // Using encodeURIComponent to handle UTF-8 characters properly before base64 encoding
+        const encodedData = btoa(encodeURIComponent(dataStr));
         const url = new URL(window.location.origin + window.location.pathname);
         url.searchParams.set('data', encodedData);
         return url.href;
@@ -230,6 +231,7 @@ const App: React.FC = () => {
                 status={getStatus(bedType, currentBedData[bedType])}
                 hasThreshold={!!BED_THRESHOLDS[bedType as keyof typeof BED_THRESHOLDS]}
                 isHighlighted={justSavedDateKey === formatDateKey(currentDate)}
+                subtext={bedType.includes('Cuida+') ? '' : undefined}
                 />
             ))}
             </div>

@@ -10,9 +10,10 @@ interface StatusCardProps {
   status: StatusLevel;
   hasThreshold: boolean;
   isHighlighted?: boolean;
+  subtext?: string;
 }
 
-const StatusCard: React.FC<StatusCardProps> = ({ title, value, maxValue, status, hasThreshold, isHighlighted }) => {
+const StatusCard: React.FC<StatusCardProps> = ({ title, value, maxValue, status, hasThreshold, isHighlighted, subtext }) => {
   const config = hasThreshold ? STATUS_CONFIG[status] : {
     label: 'Informativo',
     color: 'bg-blue-100 border-blue-500',
@@ -43,7 +44,9 @@ const StatusCard: React.FC<StatusCardProps> = ({ title, value, maxValue, status,
             </p>
           )}
         </div>
-        <p className="text-sm text-gray-400">leitos ocupados</p>
+        <p className="text-sm text-gray-400">
+            {subtext !== undefined ? subtext : 'leitos ocupados'}
+        </p>
       </div>
     </div>
   );
