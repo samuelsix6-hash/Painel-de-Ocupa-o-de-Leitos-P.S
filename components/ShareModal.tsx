@@ -19,6 +19,12 @@ const CheckIcon = () => (
     </svg>
 );
 
+const ExternalLinkIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+    </svg>
+);
+
 const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, getShareUrl }) => {
     const [longUrl, setLongUrl] = useState('');
     const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
@@ -29,11 +35,19 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, getShareUrl })
             setLongUrl(url);
             setCopyState('idle');
         }
-    }, [isOpen]); 
+    }, [isOpen, getShareUrl]); 
 
     const handleCopy = () => {
         navigator.clipboard.writeText(longUrl).then(() => {
             setCopyState('copied');
+            setTimeout(() => setCopyState('idle'), 2000);
+        });
+    };
+
+    const handleOpenShortener = () => {
+        navigator.clipboard.writeText(longUrl).then(() => {
+            setCopyState('copied');
+            window.open('https://www.encurtador.com.br/', '_blank');
             setTimeout(() => setCopyState('idle'), 2000);
         });
     };
@@ -62,11 +76,11 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, getShareUrl })
                 
                 <div className="space-y-4">
                     <p className="text-sm text-gray-600">
-                        Use o botão abaixo para copiar o link com o histórico completo dos dados.
+                        O link abaixo contém todo o histórico de dados.
                     </p>
 
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                        <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Link de Compartilhamento</label>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Link Gerado</label>
                         <div className="flex gap-2 mb-2">
                             <input 
                                 type="text" 
@@ -77,12 +91,23 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, getShareUrl })
                             <button
                                 onClick={handleCopy}
                                 className={`flex-shrink-0 px-3 py-1 rounded text-sm font-medium transition-colors ${copyState === 'copied' ? 'bg-green-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                                title="Copiar Link"
                             >
                                 {copyState === 'copied' ? <CheckIcon /> : <CopyIcon />}
                             </button>
                         </div>
-                        <p className="text-xs text-gray-400 mt-2">
-                            Dica: Caso o link seja muito extenso para enviar, utilize um encurtador externo manualmente (ex: tinyurl.com).
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-100 mt-4">
+                        <button
+                            onClick={handleOpenShortener}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm group"
+                        >
+                            <ExternalLinkIcon />
+                            <span>Ir para Encurtador.com.br</span>
+                        </button>
+                        <p className="text-xs text-center text-gray-500 mt-2">
+                            Ao clicar, o link será <strong>copiado automaticamente</strong> e o site abrirá para você colar.
                         </p>
                     </div>
                 </div>
