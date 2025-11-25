@@ -160,17 +160,26 @@ const App: React.FC = () => {
     setToastMessage('Registro excluído com sucesso!');
   };
 
-  const handleShare = () => {
+  const getShareUrl = (scope: 'current' | 'all'): string => {
     try {
-        const dataStr = JSON.stringify(historicalData);
+        let dataToShare = historicalData;
+
+        if (scope === 'current') {
+            const dateKey = formatDateKey(currentDate);
+            // If the current date exists in history, use it. Otherwise use the empty template (though usually it should exist if viewed)
+            const currentData = historicalData[dateKey] || EMPTY_BED_DATA;
+            dataToShare = { [dateKey]: currentData };
+        }
+
+        const dataStr = JSON.stringify(dataToShare);
         const encodedData = btoa(dataStr);
         const url = new URL(window.location.origin + window.location.pathname);
         url.searchParams.set('data', encodedData);
-        navigator.clipboard.writeText(url.href);
-        setToastMessage('Link de compartilhamento copiado!');
+        return url.href;
     } catch (e) {
         console.error("Failed to create share link", e);
         setToastMessage('Erro ao criar link de compartilhamento.');
+        return '';
     }
   };
 
@@ -202,7 +211,7 @@ const App: React.FC = () => {
                     currentDate={currentDate}
                     onDateChange={setCurrentDate}
                     onSave={handleSaveData}
-                    onShare={handleShare}
+                    getShareUrl={getShareUrl}
                     isAuthenticated={isAuthenticated}
                     setIsAuthenticated={setIsAuthenticated}
                 />

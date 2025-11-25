@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { BedData, BedType } from '../types';
 import { BED_MAX_VALUES, PASSWORD } from '../constants';
+import ShareModal from './ShareModal';
 
 interface ControlPanelProps {
   bedDataForDate: BedData;
   currentDate: Date;
   onDateChange: (date: Date) => void;
   onSave: (date: Date, data: BedData) => void;
-  onShare: () => void;
+  getShareUrl: (scope: 'current' | 'all') => string;
   isAuthenticated: boolean;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
 }
@@ -20,10 +21,11 @@ const ShareIcon = () => (
 );
 
 
-const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate, onDateChange, onSave, onShare, isAuthenticated, setIsAuthenticated }) => {
+const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate, onDateChange, onSave, getShareUrl, isAuthenticated, setIsAuthenticated }) => {
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState('');
   const [localBedData, setLocalBedData] = useState<BedData>(bedDataForDate);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Sync local state when the date (and thus data) changes from parent
   useEffect(() => {
@@ -59,6 +61,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate
 
   const handleSaveClick = () => {
     onSave(currentDate, localBedData);
+  };
+
+  const handleShareClick = () => {
+    setIsShareModalOpen(true);
   };
 
   if (!isAuthenticated) {
@@ -152,13 +158,19 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ bedDataForDate, currentDate
               Salvar Dados
             </button>
             <button
-              onClick={onShare}
+              onClick={handleShareClick}
               className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <ShareIcon />
               Compartilhar Link
             </button>
         </div>
+
+        <ShareModal 
+            isOpen={isShareModalOpen}
+            onClose={() => setIsShareModalOpen(false)}
+            getShareUrl={getShareUrl}
+        />
     </div>
   );
 };
