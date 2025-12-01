@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { BedData, BedType, StatusLevel, ChartData, HistoricalData } from './types';
 import { INITIAL_HISTORICAL_DATA, BED_THRESHOLDS, STATUS_CONFIG, EMPTY_BED_DATA, BED_CAPACITY } from './constants';
@@ -110,6 +109,7 @@ const App: React.FC = () => {
     return Object.entries(currentBedData).map(([name, value]) => {
       const status = getStatus(name as BedType, value as number);
       const color = STATUS_CONFIG[status].textColor.replace('text-','').replace('-700','');
+      const capacity = BED_CAPACITY[name as keyof typeof BED_CAPACITY] || 100; // Default to 100 if undefined, though types cover it.
       
       let finalColor = '#34d399'; // green-400
       if(color === 'yellow') finalColor = '#f59e0b'; // yellow-500
@@ -120,10 +120,23 @@ const App: React.FC = () => {
         finalColor = '#60a5fa'; // blue-400
       }
 
+      // Calculate percentages for the progress bar visualization
+      // We limit to 100% to avoid breaking the chart visual if over capacity
+      const rawPercent = ((value as number) / capacity) * 100;
+      const percent = Math.min(100, Math.max(0, rawPercent));
+      const freePercent = 100 - percent;
+      
+      const showCapacity = !name.includes('Cuida+') && name !== BedType.STABILIZATION;
+
       return {
-        name: name.replace('Leitos ', '').replace('Clínicos', 'Clín.').replace('Pediátricos', 'Ped.'),
-        value,
-        color: finalColor
+        name: name.replace('Leitos ', '').replace('Clínicos', 'Clín.').replace('Pediátricos', 'Ped.').replace(' (emergência) (variável)', ''),
+        value: percent, // Use percentage for the bar length
+        realValue: value as number, // Store real value for the label
+        capacity,
+        percent,
+        freePercent,
+        color: finalColor,
+        showCapacity
       };
     });
   }, [currentBedData]);
@@ -222,7 +235,7 @@ const App: React.FC = () => {
       <main className="container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
-            <h2 className="text-xl font-bold text-gray-700 mb-4">Visão Geral da Ocupação</h2>
+            <h2 className="text-xl font-bold text-gray-700 mb-4">Medidor de Ocupação (Ocupados {chartData.some(d => d.showCapacity) ? '/ Total' : ''})</h2>
             <div className="h-96">
               <BedChart data={chartData} />
             </div>

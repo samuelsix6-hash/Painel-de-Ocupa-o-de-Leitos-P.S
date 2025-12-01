@@ -1,3 +1,4 @@
+
 export enum BedType {
   CLINICAL = 'Leitos Clínicos',
   CLINICAL_CUIDA_MAIS = 'Leitos Clínicos Cuida+',
@@ -30,6 +31,11 @@ export type StatusConfig = {
 
 export type ChartData = {
     name: string;
-    value: number;
+    value: number; // This will now represent percentage for visualization
+    realValue: number; // The actual number of beds occupied
+    capacity: number;
+    percent: number;
+    freePercent: number;
     color: string;
+    showCapacity: boolean;
 }[];
