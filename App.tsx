@@ -258,18 +258,27 @@ const App: React.FC = () => {
         <div className="mt-6">
             <h2 className="text-xl font-bold text-gray-700 mb-4">Status Detalhado dos Leitos</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {(Object.keys(currentBedData) as BedType[]).map(bedType => (
-                <StatusCard
-                key={bedType}
-                title={bedType === BedType.ICU ? `${bedType} (emergência) (variável)` : bedType}
-                value={currentBedData[bedType]}
-                maxValue={BED_CAPACITY[bedType as keyof typeof BED_CAPACITY] ?? 0}
-                status={getStatus(bedType, currentBedData[bedType])}
-                hasThreshold={!!BED_THRESHOLDS[bedType as keyof typeof BED_THRESHOLDS]}
-                isHighlighted={justSavedDateKey === formatDateKey(currentDate)}
-                subtext={bedType.includes('Cuida+') ? '' : undefined}
-                />
-            ))}
+            {(Object.keys(currentBedData) as BedType[]).map(bedType => {
+                let displayTitle = bedType as string;
+                if (bedType === BedType.ICU) {
+                    displayTitle = `${bedType} (emergência) (variável)`;
+                } else if (bedType.includes('Cuida+')) {
+                    displayTitle = bedType.replace('Leitos ', '');
+                }
+
+                return (
+                    <StatusCard
+                    key={bedType}
+                    title={displayTitle}
+                    value={currentBedData[bedType]}
+                    maxValue={BED_CAPACITY[bedType as keyof typeof BED_CAPACITY] ?? 0}
+                    status={getStatus(bedType, currentBedData[bedType])}
+                    hasThreshold={!!BED_THRESHOLDS[bedType as keyof typeof BED_THRESHOLDS]}
+                    isHighlighted={justSavedDateKey === formatDateKey(currentDate)}
+                    subtext={bedType.includes('Cuida+') ? '' : undefined}
+                    />
+                );
+            })}
             </div>
         </div>
         
