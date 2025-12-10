@@ -289,24 +289,77 @@ const App: React.FC = () => {
         </div>
 
         <div className="mt-8 pb-8">
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-10">
                  <a 
                     href="https://drive.google.com/file/d/1oB5s2rZEhCwyPPJ1QLzxiBp1QlZjb7n2/view?usp=sharing"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all"
+                    className="inline-flex items-center px-6 py-3 rounded-full shadow-[0_4px_14px_0_rgba(20,184,166,0.39)] bg-teal-600 text-white text-sm font-semibold transition-all hover:bg-teal-700 hover:scale-105 active:scale-95 group"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 group-hover:rotate-6 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Acessar Projeto Cuida+ P.S
                 </a>
             </div>
 
-            <div className="mx-auto max-w-4xl bg-white border-2 border-blue-400 rounded-lg p-3 shadow-sm mb-6 text-center">
-                <p className="text-gray-600 font-bold text-sm">
-                    Leitos clínicos capacidade total 46; leitos pediátricos capacidade total 8; leitos uti capacidade total 7 nº variável.
-                </p>
+            {/* Capacity Info Modules */}
+            <div className="mx-auto max-w-5xl mb-8 px-2">
+                <div className="text-center mb-4">
+                     <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">Capacidade Instalada de Referência</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    
+                    {/* Module 1: Clínicos */}
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+                         <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Leitos Clínicos</span>
+                                <span className="text-2xl font-black text-gray-800 leading-none">46 <span className="text-xs font-medium text-gray-400">Total</span></span>
+                            </div>
+                         </div>
+                    </div>
+
+                    {/* Module 2: Pediátricos */}
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+                         <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Leitos Pediátricos</span>
+                                <span className="text-2xl font-black text-gray-800 leading-none">08 <span className="text-xs font-medium text-gray-400">Total</span></span>
+                            </div>
+                         </div>
+                    </div>
+
+                    {/* Module 3: UTI */}
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow relative overflow-hidden">
+                         <div className="absolute right-0 top-0 h-full w-1 bg-red-400"></div>
+                         <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-red-50 text-red-600 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Leitos UTI</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-2xl font-black text-gray-800 leading-none">07</span>
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-500 border border-gray-200 uppercase">Variável</span>
+                                </div>
+                            </div>
+                         </div>
+                    </div>
+
+                </div>
             </div>
 
             <div className="border-t border-gray-200 pt-4 w-1/2 mx-auto text-center">

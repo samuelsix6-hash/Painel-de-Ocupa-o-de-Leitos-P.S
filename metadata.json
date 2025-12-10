@@ -1,5 +1,5 @@
 {
-  "name": "Planilha de Leitos do P.S",
+  "name": "Painel PS Pelotas",
   "description": "A dashboard to monitor daily hospital bed capacity with color-coded status indicators and charts for quick evaluation.",
   "requestFramePermissions": []
 }
