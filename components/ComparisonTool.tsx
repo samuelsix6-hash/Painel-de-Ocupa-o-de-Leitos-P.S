@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { HistoricalData, BedType } from '../types';
+import { BED_CAPACITY } from '../constants';
 
 // Add this declaration for TypeScript to recognize the XLSX global from the CDN
 declare const XLSX: any;
@@ -9,23 +10,36 @@ interface ComparisonToolProps {
     historicalData: HistoricalData;
 }
 
-const ArrowUpIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-    </svg>
-);
-
-const ArrowDownIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-3.707-7.293l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414z" clipRule="evenodd" />
-    </svg>
-);
-
-const HorizontalLineIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-    </svg>
-);
+const TrendIcon = ({ delta }: { delta: number }) => {
+    if (delta > 0) {
+        return (
+            <div className="flex items-center text-red-600 bg-red-100 px-2 py-1 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
+                </svg>
+                <span className="font-bold">+{delta}</span>
+            </div>
+        );
+    }
+    if (delta < 0) {
+        return (
+            <div className="flex items-center text-green-600 bg-green-100 px-2 py-1 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 13a1 1 0 110 2h5a1 1 0 011-1V9a1 1 0 11-2 0v2.586l-4.293-4.293a1 1 0 01-1.414 0L8 9.586 3.707 5.293a1 1 0 01-1.414 1.414l5 5a1 1 0 011.414 0L11 9.414 14.586 13H12z" clipRule="evenodd" />
+                </svg>
+                <span className="font-bold">{delta}</span>
+            </div>
+        );
+    }
+    return (
+        <div className="flex items-center text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+            <span className="font-bold">0</span>
+        </div>
+    );
+};
 
 const DownloadIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -55,11 +69,14 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ historicalData }) => {
             const value1 = data1[type] ?? 0;
             const value2 = data2[type] ?? 0;
             const delta = value2 - value1;
+            const capacity = BED_CAPACITY[type as keyof typeof BED_CAPACITY] || 100;
+
             return {
                 type,
                 value1,
                 value2,
                 delta,
+                capacity
             };
         });
 
@@ -91,36 +108,38 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ historicalData }) => {
     };
     
     if (availableDates.length < 2) {
-        return null; // Don't render the tool if there aren't at least two dates to compare
+        return null; 
     }
 
     return (
         <div className="mt-6 bg-white p-6 rounded-xl shadow-md">
-            <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
-                <h3 className="text-xl font-bold text-gray-700">Comparativo de Ocupação</h3>
+            <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+                <div>
+                    <h3 className="text-xl font-bold text-gray-700">Comparativo de Evolução</h3>
+                    <p className="text-sm text-gray-500">Selecione duas datas para visualizar a mudança na ocupação.</p>
+                </div>
                 {comparisonData && (
                      <button
                         onClick={handleDownloadExcel}
-                        className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                        aria-label="Baixar comparativo em Excel"
+                        className="flex items-center space-x-2 px-4 py-2 bg-slate-100 text-slate-600 text-sm font-semibold rounded-lg hover:bg-slate-200 transition-colors border border-slate-200"
                     >
                         <DownloadIcon />
-                        <span>Baixar Excel</span>
+                        <span>Baixar Relatório</span>
                     </button>
                 )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div>
-                    <label htmlFor="date1-select" className="block text-sm font-medium text-gray-700 mb-1">
-                        Selecione a Data 1
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-wide">
+                        Data Inicial (Referência)
                     </label>
                     <select
-                        id="date1-select"
                         value={date1}
                         onChange={handleDateChange(setDate1)}
-                        className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                        className="w-full bg-white border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer transition-shadow"
                     >
-                        <option value="">-- Escolha uma data --</option>
+                        <option value="">Selecione a primeira data...</option>
                         {availableDates.map(date => (
                             <option key={date} value={date}>
                                 {new Date(`${date}T00:00:00`).toLocaleDateString('pt-BR')}
@@ -128,17 +147,16 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ historicalData }) => {
                         ))}
                     </select>
                 </div>
-                <div>
-                    <label htmlFor="date2-select" className="block text-sm font-medium text-gray-700 mb-1">
-                        Selecione a Data 2
+                <div className="flex flex-col justify-end">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-wide">
+                        Data Final (Comparação)
                     </label>
                     <select
-                        id="date2-select"
                         value={date2}
                         onChange={handleDateChange(setDate2)}
-                        className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                        className="w-full bg-white border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer transition-shadow"
                     >
-                        <option value="">-- Escolha uma data --</option>
+                        <option value="">Selecione a segunda data...</option>
                         {availableDates.map(date => (
                             <option key={date} value={date}>
                                 {new Date(`${date}T00:00:00`).toLocaleDateString('pt-BR')}
@@ -149,36 +167,65 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ historicalData }) => {
             </div>
 
             {comparisonData ? (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Leito</th>
-                                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{new Date(`${date1}T00:00:00`).toLocaleDateString('pt-BR')}</th>
-                                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{new Date(`${date2}T00:00:00`).toLocaleDateString('pt-BR')}</th>
-                                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Diferença</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {comparisonData.map(item => (
-                                <tr key={item.type} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.type}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{item.value1}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{item.value2}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                        <div className={`flex items-center justify-center space-x-2 font-semibold ${item.delta > 0 ? 'text-red-600' : item.delta < 0 ? 'text-green-600' : 'text-gray-600'}`}>
-                                            {item.delta > 0 ? <ArrowUpIcon /> : item.delta < 0 ? <ArrowDownIcon /> : <HorizontalLineIcon />}
-                                            <span className="w-4 text-center">{item.delta}</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {comparisonData.map(item => {
+                        const percent1 = Math.min(100, (item.value1 / item.capacity) * 100);
+                        const percent2 = Math.min(100, (item.value2 / item.capacity) * 100);
+                        
+                        let displayTitle = item.type as string;
+                        if (displayTitle === BedType.ICU) displayTitle = 'UTI (Emergência)';
+                        displayTitle = displayTitle.replace('Leitos ', '').replace('Cuida+', 'C+');
+
+                        return (
+                            <div key={item.type} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-400 to-indigo-500 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                                
+                                <div className="flex justify-between items-start mb-4">
+                                    <h4 className="font-bold text-gray-700 text-sm uppercase tracking-tight max-w-[70%]">{displayTitle}</h4>
+                                    <TrendIcon delta={item.delta} />
+                                </div>
+
+                                <div className="flex items-center justify-between text-sm mb-4">
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-400 text-xs">Antes</span>
+                                        <span className="font-bold text-gray-600 text-lg">{item.value1}</span>
+                                    </div>
+                                    <div className="text-gray-300 mx-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-gray-400 text-xs">Depois</span>
+                                        <span className={`font-bold text-xl ${item.delta > 0 ? 'text-red-600' : item.delta < 0 ? 'text-green-600' : 'text-gray-800'}`}>
+                                            {item.value2}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Visual Bars Comparison */}
+                                <div className="space-y-2">
+                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-gray-400 h-1.5 rounded-full" style={{ width: `${percent1}%` }} title={`Antes: ${percent1.toFixed(0)}%`}></div>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                        <div 
+                                            className={`h-2 rounded-full transition-all duration-500 ${item.delta > 0 ? 'bg-red-500' : item.delta < 0 ? 'bg-green-500' : 'bg-blue-500'}`} 
+                                            style={{ width: `${percent2}%` }}
+                                            title={`Agora: ${percent2.toFixed(0)}%`}
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             ) : (
-                <div className="text-center py-8 bg-gray-50 rounded-lg">
-                    <p className="text-gray-500">Selecione duas datas para comparar os dados de ocupação.</p>
+                <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                    <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="mt-2 text-gray-500 font-medium">Selecione as datas acima para gerar a comparação.</p>
                 </div>
             )}
         </div>
