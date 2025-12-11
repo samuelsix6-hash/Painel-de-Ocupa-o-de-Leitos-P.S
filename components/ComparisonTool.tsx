@@ -94,12 +94,26 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ historicalData }) => {
         const formattedDate1 = new Date(`${date1}T00:00:00`).toLocaleDateString('pt-BR');
         const formattedDate2 = new Date(`${date2}T00:00:00`).toLocaleDateString('pt-BR');
 
-        const dataForSheet = comparisonData.map(item => ({
-            'Tipo de Leito': item.type,
-            [formattedDate1]: item.value1,
-            [formattedDate2]: item.value2,
-            'Diferença': item.delta,
-        }));
+        const dataForSheet = comparisonData.map(item => {
+            let typeLabel = item.type as string;
+            // Map keys for Excel export
+            if (item.type === BedType.ICU) {
+                typeLabel = 'UTI (Emergência)';
+            } else if (item.type === BedType.CLINICAL_CUIDA_MAIS) {
+                typeLabel = 'Clínicos Cuida +';
+            } else if (item.type === BedType.PEDIATRIC_CUIDA_MAIS) {
+                typeLabel = 'Pediátricos Cuida +';
+            } else {
+                 typeLabel = typeLabel.replace('Leitos ', '');
+            }
+
+            return {
+                'Tipo de Leito': typeLabel,
+                [formattedDate1]: item.value1,
+                [formattedDate2]: item.value2,
+                'Diferença': item.delta,
+            };
+        });
         
         const ws = XLSX.utils.json_to_sheet(dataForSheet);
         const wb = XLSX.utils.book_new();
@@ -173,10 +187,29 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ historicalData }) => {
                         const percent2 = Math.min(100, (item.value2 / item.capacity) * 100);
                         
                         let displayTitle = item.type as string;
-                        if (displayTitle === BedType.ICU) {
-                            displayTitle = 'UTI (Emergência)';
-                        } else {
-                            displayTitle = displayTitle.replace('Leitos ', '').replace('Cuida+', 'Cuida +');
+
+                        // Explicit mapping for nomenclature
+                        switch (item.type) {
+                            case BedType.ICU:
+                                displayTitle = 'UTI (Emergência)';
+                                break;
+                            case BedType.CLINICAL_CUIDA_MAIS:
+                                displayTitle = 'Clínicos Cuida +';
+                                break;
+                            case BedType.PEDIATRIC_CUIDA_MAIS:
+                                displayTitle = 'Pediátricos Cuida +';
+                                break;
+                            case BedType.CLINICAL:
+                                displayTitle = 'Clínicos';
+                                break;
+                            case BedType.PEDIATRIC:
+                                displayTitle = 'Pediátricos';
+                                break;
+                            case BedType.STABILIZATION:
+                                displayTitle = 'Estabilização';
+                                break;
+                            default:
+                                displayTitle = displayTitle.replace('Leitos ', '');
                         }
 
                         return (
