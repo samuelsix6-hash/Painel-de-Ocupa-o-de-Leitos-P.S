@@ -173,8 +173,11 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ historicalData }) => {
                         const percent2 = Math.min(100, (item.value2 / item.capacity) * 100);
                         
                         let displayTitle = item.type as string;
-                        if (displayTitle === BedType.ICU) displayTitle = 'UTI (Emergência)';
-                        displayTitle = displayTitle.replace('Leitos ', '').replace('Cuida+', 'C+');
+                        if (displayTitle === BedType.ICU) {
+                            displayTitle = 'UTI (Emergência)';
+                        } else {
+                            displayTitle = displayTitle.replace('Leitos ', '').replace('Cuida+', 'Cuida +');
+                        }
 
                         return (
                             <div key={item.type} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
