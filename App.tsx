@@ -105,12 +105,16 @@ const App: React.FC = () => {
   }, [allDatesSorted, selectedMonth]);
 
   const getMonthLabel = (monthStr: string) => {
-    if (!monthStr) return "";
-    if (monthStr === 'all') return 'Todos os períodos';
-    const [year, month] = monthStr.split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-    const label = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    return label.charAt(0).toUpperCase() + label.slice(1);
+    if (!monthStr) return "Nenhum período selecionado";
+    if (monthStr === 'all') return 'Todo o Histórico';
+    try {
+        const [year, month] = monthStr.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+        const label = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        return label.charAt(0).toUpperCase() + label.slice(1);
+    } catch (e) {
+        return monthStr;
+    }
   };
 
   const getStatus = (bedType: BedType, value: number): StatusLevel => {
@@ -303,21 +307,22 @@ const App: React.FC = () => {
                     <select
                         value={selectedMonth}
                         onChange={(e) => setSelectedMonth(e.target.value)}
-                        className="w-full bg-white border border-indigo-200 rounded-lg py-2 px-4 font-bold text-indigo-900 outline-none focus:ring-2 focus:ring-indigo-400"
+                        className="w-full bg-white border border-indigo-200 rounded-lg py-2 px-4 font-bold text-indigo-900 outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer"
                     >
+                         <option value="all">Todo o Histórico</option>
                         {availableMonths.map(month => (
                             <option key={month} value={month}>
                                 {getMonthLabel(month)}
                             </option>
                         ))}
-                        <option value="all">Todo o Histórico</option>
                     </select>
                 </div>
             </div>
         )}
         
-        {/* NEW LOCATION FOR STATISTICS PANEL */}
+        {/* STATISTICS PANEL */}
         <StatisticsPanel 
+            key={`stats-${selectedMonth}`}
             data={historicalData} 
             filteredDates={filteredDates} 
             selectedMonthLabel={getMonthLabel(selectedMonth)} 
